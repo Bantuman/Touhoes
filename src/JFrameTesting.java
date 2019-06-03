@@ -1,11 +1,16 @@
 import java.awt.*;
 import java.awt.List;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import javax.imageio.ImageIO;
@@ -200,7 +205,52 @@ class Animation{
 		return currentImage;
 	}
 }
+class MyFileTransferHandler extends TransferHandler {
+  public boolean canImport(JComponent com, DataFlavor[] dataFlavors) {
+    for (int i = 0; i < dataFlavors.length; i++) {
+      DataFlavor flavor = dataFlavors[i];
+      if (flavor.equals(DataFlavor.javaFileListFlavor)) {
+        return true;
+      }
+      if (flavor.equals(DataFlavor.stringFlavor)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
+  public boolean importData(JComponent comp, Transferable t) {
+    DataFlavor[] flavors = t.getTransferDataFlavors();
+    for (int i = 0; i < flavors.length; i++) {
+      DataFlavor flavor = flavors[i];
+      try {
+        if (flavor.equals(DataFlavor.javaFileListFlavor)) {   
+          java.util.List l = (java.util.List) t.getTransferData(DataFlavor.javaFileListFlavor);
+		  Iterator iter = l.iterator();
+          while (iter.hasNext()) {
+            File file = (File) iter.next();
+            // nom nom nom
+            file.delete();
+            System.out.println("ate file " + file.getCanonicalPath());
+          }
+          return true;
+        } else if (flavor.equals(DataFlavor.stringFlavor)) {
+          String fileOrURL = (String) t.getTransferData(flavor);
+          try {
+            URL url = new URL(fileOrURL);
+            return true;
+          } catch (MalformedURLException ex) {
+            return false;
+          }
+        } else {
+        }
+      } catch (IOException ex) {
+      } catch (UnsupportedFlavorException e) {
+      }
+    }
+    return false;
+  }
+}
 class Figure extends Body{
 	public static final float UPDATE_RATE = 1.5f;
 	public static final float GRAVITY = 9.82f;
@@ -215,6 +265,7 @@ class Figure extends Body{
 	
 	private ImageIcon imageIcon;
 	private boolean figureGrounded;
+	private boolean figureFlying;
 	
 	public JFrame figureFrame;
 	public float figureMass;
@@ -231,6 +282,8 @@ class Figure extends Body{
 		
 		bodyRectangle.setLocation(figurePosition.ToPoint());
 		figureFrame = new JFrame(figureName);
+		JComponent cp = (JComponent) figureFrame.getContentPane();
+		cp.setTransferHandler(new MyFileTransferHandler());
 		figureFrame.setAlwaysOnTop(true);
 		figureFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		figureFrame.setUndecorated(true);
@@ -238,8 +291,8 @@ class Figure extends Body{
 		figureFrame.setBounds(figureSize);
 		figureFrame.setLocation(bodyRectangle.getLocation());
 		
-		m = new Message("testing 123 lol ololol", 0.1f, bodyPosition, this);
-		JFrameTesting.figureController.getContentPane().add(m);
+		//m = new Message("testing 123 lol ololol", 0.1f, bodyPosition, this);
+		//JFrameTesting.figureController.getContentPane().add(m);
 		BufferedImage bufferedImage = null;
 		try {
 			bufferedImage = ImageIO.read(new File(imageName));
@@ -284,6 +337,10 @@ class Figure extends Body{
 
             @Override
             public void mouseReleased(MouseEvent e) {
+            	if (e.isShiftDown())
+            	{
+            		figureFlying = true;
+            	}
             	figureDragging = false;
             }
         });
@@ -292,7 +349,7 @@ class Figure extends Body{
 	@Override
 	public Vector2 Update(float deltaTime)
 	{
-		m.Update(deltaTime);
+		//m.Update(deltaTime);
 		if (currentAnimation != null)
 		{
 			Image nextImage = currentAnimation.Update(deltaTime);
@@ -301,6 +358,14 @@ class Figure extends Body{
 				imageIcon.setImage(nextImage);
 				figureFrame.repaint();
 			}
+		}
+
+		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
+		float height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
+		if (bodyPosition.x < -128 || bodyPosition.x > width + 128 || bodyPosition.y < -64 || bodyPosition.y > height)
+		{
+			bodyPosition = new Vector2(100, 64);
+			bodyVelocity = new Vector2(0, 0);
 		}
 		
 		bodyVelocity = new Vector2(Math.min(5, Math.max(-5, bodyVelocity.x)), Math.min(5, Math.max(-5, bodyVelocity.y)));
@@ -412,6 +477,8 @@ public class JFrameTesting {
 		figureController.setLocation(0, 0);
 		figureController.pack();
 		figureController.setVisible(true);
+		
+		//List<File> dropppedFiles = (List<File>)transferable.getTransferData(DataFlavor.javaFileListFlavor);
 		
 		// MIGHT WANNA SWITCH TO THIS IN THE FUTURE: https://gafferongames.com/post/fix_your_timestep/
 		
