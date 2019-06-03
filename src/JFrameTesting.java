@@ -339,7 +339,7 @@ class Figure extends Body{
             public void mouseReleased(MouseEvent e) {
             	if (e.isShiftDown())
             	{
-            		figureFlying = true;
+            		figureFlying = !figureFlying;
             	}
             	figureDragging = false;
             }
@@ -369,8 +369,8 @@ class Figure extends Body{
 		}
 		
 		bodyVelocity = new Vector2(Math.min(5, Math.max(-5, bodyVelocity.x)), Math.min(5, Math.max(-5, bodyVelocity.y)));
-		
-		bodyVelocity.Translate(0, (GRAVITY / figureMass) * deltaTime);
+
+		bodyVelocity.Translate(0, (GRAVITY / figureMass) * deltaTime * (figureFlying ? 0.01f : 1f));
 		bodyPosition.Translate(bodyVelocity.x * deltaTime, bodyVelocity.y * deltaTime);
 		figureGrounded = (bodyPosition.y > JFrameTesting.figureController.getHeight() - 96);
 		if (bodyVelocity.x > 0.1f && !figureGrounded)
