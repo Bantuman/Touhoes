@@ -402,7 +402,7 @@ class Figure extends Body{
 				}
 				bodyPosition = bodyPosition.Lerp(new Vector2(targetPosition.x, targetPosition.y), (float)(1 - Math.pow(0.1, deltaTime)));
 				bodyVelocity = bodyVelocity.Lerp(
-						new Vector2((targetPosition.x - previousMousePosition.x) * 0.3f, (targetPosition.y - previousMousePosition.y) * 0.2f),
+						new Vector2((targetPosition.x - previousMousePosition.x) * 0.1f, (targetPosition.y - previousMousePosition.y) * 0.1f),
 						(float)(1 - Math.pow(0.1, deltaTime))
 				);
 				previousMousePosition = targetPosition;
