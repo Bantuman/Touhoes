@@ -5,5 +5,12 @@
 /Figure.class
 /JFrameTesting.class
 /Message.class
-/Vector2.class
 /MyFileTransferHandler.class
+/Vector2.class
+/MessageHandle.class
+/MessageItem.class
+/MessageHandle$1.class
+/MessageHandle$2.class
+/LoliStomach.class
+/Stomach.class
+/FairyStomach.class

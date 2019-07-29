@@ -6,6 +6,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -205,67 +206,156 @@ class Animation{
 		return currentImage;
 	}
 }
-class MyFileTransferHandler extends TransferHandler {
-  public boolean canImport(JComponent com, DataFlavor[] dataFlavors) {
-    for (int i = 0; i < dataFlavors.length; i++) {
-      DataFlavor flavor = dataFlavors[i];
-      if (flavor.equals(DataFlavor.javaFileListFlavor)) {
-        return true;
-      }
-      if (flavor.equals(DataFlavor.stringFlavor)) {
-        return true;
-      }
-    }
-    return false;
-  }
+class FairyStomach extends TransferHandler {
+	private Figure body;
+	public FairyStomach(Figure body)
+	{
+		super();
+		this.body = body;
+	}
+	public boolean canImport(JComponent com, DataFlavor[] dataFlavors) {
+		for (int i = 0; i < dataFlavors.length; i++) {
+			DataFlavor flavor = dataFlavors[i];
+			if (flavor.equals(DataFlavor.javaFileListFlavor)) {
+				return true;
+			}
+			if (flavor.equals(DataFlavor.stringFlavor)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-  public boolean importData(JComponent comp, Transferable t) {
-    DataFlavor[] flavors = t.getTransferDataFlavors();
-    for (int i = 0; i < flavors.length; i++) {
-      DataFlavor flavor = flavors[i];
-      try {
-        if (flavor.equals(DataFlavor.javaFileListFlavor)) {   
-          java.util.List l = (java.util.List) t.getTransferData(DataFlavor.javaFileListFlavor);
-		  Iterator iter = l.iterator();
-          while (iter.hasNext()) {
-            File file = (File) iter.next();
-            // nom nom nom
-            file.delete();
-            System.out.println("ate file " + file.getCanonicalPath());
-          }
-          return true;
-        } else if (flavor.equals(DataFlavor.stringFlavor)) {
-          String fileOrURL = (String) t.getTransferData(flavor);
-          try {
-            URL url = new URL(fileOrURL);
-            return true;
-          } catch (MalformedURLException ex) {
-            return false;
-          }
-        } else {
-        }
-      } catch (IOException ex) {
-      } catch (UnsupportedFlavorException e) {
-      }
-    }
-    return false;
-  }
+	public boolean importData(JComponent comp, Transferable t) {
+		DataFlavor[] flavors = t.getTransferDataFlavors();
+		for (int i = 0; i < flavors.length; i++) {
+			DataFlavor flavor = flavors[i];
+			try {
+				if (flavor.equals(DataFlavor.javaFileListFlavor)) {   
+					@SuppressWarnings("rawtypes")
+					java.util.List l = (java.util.List) t.getTransferData(DataFlavor.javaFileListFlavor);
+					Iterator iter = l.iterator();
+					while (iter.hasNext()) {
+						File file = (File) iter.next();
+						JFrameTesting.figureHandler.SendMessage("nom nom nom", body.bodyRectangle.getLocation());
+						file.delete();
+					}
+					return true;
+				} else if (flavor.equals(DataFlavor.stringFlavor)) {
+					String fileOrURL = (String) t.getTransferData(flavor);
+					try {
+						URL url = new URL(fileOrURL);
+						return true;
+					} catch (MalformedURLException ex) {
+						return false;
+					}
+				} else {
+				}
+			} catch (IOException ex) {
+			} catch (UnsupportedFlavorException e) {
+			}
+		}
+		return false;
+	}
 }
+
+class MessageItem{
+	public float timer;
+	public JLabel messageFrame;
+	public JLabel messageText;
+	public MessageItem(JLabel messageFrame, JLabel messageText)
+	{
+		this.timer = 0;
+		this.messageFrame = messageFrame;
+		this.messageText = messageText;
+	}
+}
+
+class MessageHandle{
+	
+	public JFrame messageOverlayFrame;
+	public JFrame messageLogFrame;
+	
+	public MessageHandle(){
+		messageOverlayFrame = new JFrame("Message Overlay");
+		messageOverlayFrame.setAlwaysOnTop(true);
+		messageOverlayFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		messageOverlayFrame.setType(javax.swing.JFrame.Type.UTILITY);
+		messageOverlayFrame.setUndecorated(true);
+		messageOverlayFrame.setBackground(new Color(1f, 1f, 1f, 0f));
+		messageOverlayFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+		messageOverlayFrame.setVisible(true);
+		
+		messageLogFrame = new JFrame("Touhoes");
+		messageLogFrame.setAlwaysOnTop(true);
+		messageLogFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		messageLogFrame.setBounds(150, 150, 640, 420);
+		messageLogFrame.setVisible(true);
+	}
+	
+	public void SendMessage(String message, Point location){
+		
+		Font messageFont = new Font("Arial", Font.BOLD, 12);
+		JFrame messageFrame = new JFrame();
+		messageFrame.setAlwaysOnTop(true);
+		messageFrame.setLocation(location);
+		messageFrame.setUndecorated(true);
+		messageFrame.setType(javax.swing.JFrame.Type.UTILITY);
+		messageFrame.setBounds(location.x, location.y, messageFrame.getFontMetrics(messageFont).stringWidth(message) + 6, 16);
+		
+		
+		JLabel textLabel = new JLabel(message);
+		textLabel.setFont(messageFont);
+		textLabel.setOpaque(false);
+		textLabel.setHorizontalAlignment(JLabel.CENTER);
+		textLabel.setVerticalAlignment(JLabel.CENTER);
+		messageFrame.getContentPane().add(textLabel);
+		messageFrame.setVisible(true);
+		messageFrame.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+            	messageFrame.dispose();
+            }
+        });
+		
+		new Thread(){
+		      @Override
+		      public void run() {
+		           try {
+		                  Thread.sleep(3000); // time after which pop up will be disappeared.
+		                  messageFrame.dispose();
+		           } catch (InterruptedException e) {
+		                  e.printStackTrace();
+		           }
+		      };
+		}.start();
+		
+		// add log to log
+	}
+}
+
 class Figure extends Body{
 	public static final float UPDATE_RATE = 1.5f;
 	public static final float GRAVITY = 9.82f;
 	public static ArrayList<Figure> allFigures;
 	
-	private Message m;
 	private Animation currentAnimation,
 					  idleAnimation,
 					  flyLeftAnimation,
 					  flyRightAnimation,
 					  flyCenterAnimation;
 	
+	private float figureTalkTimer;
+	private float figureTalkDelay;
 	private ImageIcon imageIcon;
+	private Random randomizer;
 	private boolean figureGrounded;
 	private boolean figureFlying;
+	private String[] figureMessages = new String[]{
+			"Mwee~!", "Nyaa~!", "Nep Nep", "Mwehe", "ANGRY MWEE", "HAYA~!!!!!", "*swosh*", "errryybody in d club geting tipsyy~", "shut up", "I shut up", "0key",
+			"Feed me, dumb", "B-Baka", "Chaika to the frontpage", "Why was I made in java", "s-stop that master",
+			"?", "!", "!!", "!!!", "!?", ":(", ":)", ":D", "D:"
+	};
 	
 	public JFrame figureFrame;
 	public float figureMass;
@@ -279,39 +369,25 @@ class Figure extends Body{
 		this.bodyPosition = figurePosition;
 		this.bodyVelocity = new Vector2(0, 0);
 		this.bodyRectangle = figureSize;
+		this.randomizer = new Random(figureName.length() + (int)figureMass);
 		
+		figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
 		bodyRectangle.setLocation(figurePosition.ToPoint());
 		figureFrame = new JFrame(figureName);
 		JComponent cp = (JComponent) figureFrame.getContentPane();
-		cp.setTransferHandler(new MyFileTransferHandler());
+		cp.setTransferHandler(new FairyStomach(this));
 		figureFrame.setAlwaysOnTop(true);
+		figureFrame.setType(javax.swing.JFrame.Type.UTILITY);
 		figureFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		figureFrame.setUndecorated(true);
 		figureFrame.setBackground(new Color(1f, 1f, 1f, 0f));
 		figureFrame.setBounds(figureSize);
 		figureFrame.setLocation(bodyRectangle.getLocation());
 		
-		//m = new Message("testing 123 lol ololol", 0.1f, bodyPosition, this);
-		//JFrameTesting.figureController.getContentPane().add(m);
-		BufferedImage bufferedImage = null;
-		try {
-			bufferedImage = ImageIO.read(new File(imageName));
-		} catch(IOException exception){
-			System.out.println("Couldn't find image");
-			exception.printStackTrace();
-		}
-		
 		double scaleX = figureSize.getWidth() / 24;
 		double scaleY = figureSize.getHeight() / 32;
-		int w = bufferedImage.getWidth() * (int)scaleX;
-		int h = bufferedImage.getHeight() * (int)scaleY;
-		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-		AffineTransform at = new AffineTransform();
-		at.scale(scaleX, scaleY);
-		AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-		after = scaleOp.filter(bufferedImage, after);
-		bufferedImage = after;
 		
+		BufferedImage bufferedImage = JFrameTesting.LoadImage(imageName, scaleX, scaleY);
 		imageIcon = new ImageIcon(bufferedImage);
 		JLabel imageLabel = new JLabel(imageIcon);
 		Rectangle scaledRectangle = new Rectangle((int)figureSize.getWidth(), (int)figureSize.getHeight());
@@ -360,6 +436,14 @@ class Figure extends Body{
 			}
 		}
 
+		figureTalkTimer += deltaTime;
+		if (figureTalkTimer >= figureTalkDelay)
+		{
+			figureTalkTimer = 0;
+			figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
+			JFrameTesting.figureHandler.SendMessage(figureMessages[randomizer.nextInt(figureMessages.length)], bodyRectangle.getLocation());
+		}
+		
 		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
 		float height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
 		if (bodyPosition.x < -128 || bodyPosition.x > width + 128 || bodyPosition.y < -64 || bodyPosition.y > height)
@@ -434,8 +518,31 @@ class DebugRectangle extends JComponent {
 public class JFrameTesting {
 
 	public static JFrame figureController;
+	public static MessageHandle figureHandler;
 	public static final boolean DEBUG = false;
-	public static void main(String[] args) {
+	
+	public static BufferedImage LoadImage(String path, double scaleX, double scaleY)
+	{
+		BufferedImage bufferedImage = null;
+		try {
+			bufferedImage = ImageIO.read(new File(path));
+		} catch(IOException exception){
+			System.out.println("Couldn't find image");
+			exception.printStackTrace();
+		}
+		
+		int w = bufferedImage.getWidth() * (int)scaleX;
+		int h = bufferedImage.getHeight() * (int)scaleY;
+		BufferedImage after = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		AffineTransform at = new AffineTransform();
+		at.scale(scaleX, scaleY);
+		AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+		after = scaleOp.filter(bufferedImage, after);
+		bufferedImage = after;
+		return bufferedImage;
+	}
+	
+	public static void main(String[] args) { 
 		figureController = new JFrame("Controller");
 		figureController.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		figureController.setExtendedState(JFrame.MAXIMIZED_BOTH); 
@@ -455,6 +562,8 @@ public class JFrameTesting {
 		Figure.allFigures = new ArrayList<Figure>();
 		Body.DEBUG_RECT = new DebugRectangle(Body.allBodies);
 		
+		figureHandler = new MessageHandle();
+		
 		new Figure(new Vector2(50, 0), "Sanae Kochiya", "figures/Sanae Kochiya.png", new Rectangle(24 * 2, 32 * 2), 4000);
 		new Figure(new Vector2(150, 0), "Cirno", "figures/Cirno.png", new Rectangle(24 * 2, 32 * 2), 7000);
 		new Figure(new Vector2(250, 0), "Youmu Konpaku", "figures/Youmu Konpaku.png", new Rectangle(24 * 2, 32 * 2), 6000);
@@ -468,6 +577,7 @@ public class JFrameTesting {
 		new Body(new Vector2(0, -5120).add(safeBounds), new Rectangle(width, 5120));
 		new Body(new Vector2(width, -2560).add(safeBounds), new Rectangle(51200, height + 5120));
 		new Body(new Vector2(-51200, -2560).add(safeBounds), new Rectangle(51200, height + 5120));		
+		
 		
 		if (DEBUG)
 		{
