@@ -1,0 +1,28 @@
+{
+    "firstName": "Cirno",
+    "lastName": "",
+    "spawnPosition": {
+        "x": 50,
+        "y": 0
+    },
+    "spriteSize": {
+        "x": 48,
+        "y": 64
+    },
+    "floatValue": 7000,
+    "vocabulary" : {
+        "upset" : [
+            "Feed me", "fooood.....", "total Hunger"
+        ],
+        "normal" : [
+            "Mwee~!", "Nyaa~!", "Nep Nep", "Mwehe", "ANGRY MWEE", "HAYA~!!!!!", "*swosh*", "errryybody in d club geting tipsyy~", "shut up", "I shut up", "Okey",
+			"Feed me, dumb", "B-Baka", "Chaika to the frontpage", "Why  ,I made in java", "s-stop that Master",
+			"?", "!", "!!", "!!!", "!?", ":(", ":)", ":D", "D:", "Heh"
+        ],
+        "happy" : [
+
+        ]
+    } 
+}
+
+

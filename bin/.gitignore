@@ -1,9 +1,13 @@
-/MessageHandle$DebugRectangle.class
-/MessageHandle$Figure.class
-/MessageHandle$JFrameTesting.class
+/Animation.class
+/Body.class
 /DebugRectangle.class
+/FairyStomach.class
 /Figure$1.class
 /Figure.class
 /JFrameTesting.class
+/Message.class
 /MessageHandle$1.class
 /MessageHandle$2.class
+/MessageHandle.class
+/Vector2.class
+/Vocabulary.class

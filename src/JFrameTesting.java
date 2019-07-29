@@ -12,7 +12,16 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.json.simple.JSONArray; 
+import org.json.simple.JSONObject; 
+import org.json.simple.parser.*; 
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -283,6 +292,9 @@ class MessageHandle{
 		messageLogFrame.setResizable(false);
 		messageLogFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		messageLogFrame.setBounds(150, 150, 640, 420);
+		//messageLogFrame.setPreferredSize(new Dimension(640, 420));
+		messageLogFrame.setMaximumSize(new Dimension(420, 720));
+		messageLogFrame.setMinimumSize(new Dimension(256, 64));
 		
 		JPanel messageLogPanel = new JPanel();
 		messageLogPanel.setLayout(new FlowLayout());
@@ -292,11 +304,18 @@ class MessageHandle{
 		messageLogPanel.add(messageLogListNames);
 		
 		messageLogListText = new JList<>(messageLogText);
+		messageLogListText.setBackground(messageLogFrame.getBackground());
+		messageLogListText.setFont(new Font("Dialog", Font.PLAIN, 12));
 		messageLogListText.setBounds(messageLogFrame.getBounds());
 		messageLogPanel.add(messageLogListText);
 		
+		DefaultListCellRenderer renderer = (DefaultListCellRenderer) messageLogListNames.getCellRenderer();
+		renderer.setHorizontalAlignment(SwingConstants.RIGHT);
+		renderer.setIcon(new ImageIcon(""));
+		
 		messageLogFrame.getContentPane().add(messageLogPanel);
 		messageLogFrame.setVisible(true);
+		messageLogFrame.pack();
 	}
 	
 	public void SendMessage(String message, Point location){
@@ -305,7 +324,7 @@ class MessageHandle{
 	
 	public void SendMessage(String message, Point location, String name){
 		
-		Font messageFont = new Font("Arial", Font.BOLD, 12);
+		Font messageFont = new Font("Dialog", Font.BOLD, 12);
 		JFrame messageFrame = new JFrame();
 		messageFrame.setAlwaysOnTop(true);
 		messageFrame.setLocation(location);
@@ -356,22 +375,23 @@ class Figure extends Body{
 					  flyRightAnimation,
 					  flyCenterAnimation;
 	
+	private Vocabulary figureVocabulary;
 	private float figureTalkTimer;
 	private float figureTalkDelay;
 	private ImageIcon imageIcon;
 	private Random randomizer;
 	private boolean figureGrounded;
 	private boolean figureFlying;
-	private String[] figureMessages = new String[]{
-			"Mwee~!", "Nyaa~!", "Nep Nep", "Mwehe", "ANGRY MWEE", "HAYA~!!!!!", "*swosh*", "errryybody in d club geting tipsyy~", "shut up", "I shut up", "0key",
-			"Feed me, dumb", "B-Baka", "Chaika to the frontpage", "Why was I made in java", "s-stop that master",
-			"?", "!", "!!", "!!!", "!?", ":(", ":)", ":D", "D:"
-	};
 	
 	public JFrame figureFrame;
 	public float figureMass;
 	public boolean figureDragging;
 	public Point previousMousePosition;
+	
+	public void setVocabulary(Vocabulary someVocabulary)
+	{
+		figureVocabulary = someVocabulary;
+	}
 	
 	public Figure(Vector2 figurePosition, String figureName, String imageName, Rectangle figureSize, float figureMass)
 	{
@@ -452,7 +472,7 @@ class Figure extends Body{
 		{
 			figureTalkTimer = 0;
 			figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
-			JFrameTesting.figureHandler.SendMessage(figureMessages[randomizer.nextInt(figureMessages.length)], bodyRectangle.getLocation(), figureFrame.getTitle());
+			JFrameTesting.figureHandler.SendMessage((String)figureVocabulary.normal.get(randomizer.nextInt(figureVocabulary.normal.size())), bodyRectangle.getLocation(), figureFrame.getTitle());
 		}
 		
 		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
@@ -526,6 +546,18 @@ class DebugRectangle extends JComponent {
 	}
 }
 
+class Vocabulary {
+	public JSONArray upset;
+	public JSONArray normal;
+	public JSONArray happy;
+	public Vocabulary(JSONArray upset, JSONArray normal, JSONArray happy)
+	{
+		this.upset = upset;
+		this.normal = normal;
+		this.happy = happy;
+	}
+}
+
 public class JFrameTesting {
 
 	public static JFrame figureController;
@@ -553,7 +585,8 @@ public class JFrameTesting {
 		return bufferedImage;
 	}
 	
-	public static void main(String[] args) { 
+	public static void main(String[] args) throws Exception  
+    { 
 		figureController = new JFrame("Controller");
 		figureController.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		figureController.setExtendedState(JFrame.MAXIMIZED_BOTH); 
@@ -575,20 +608,47 @@ public class JFrameTesting {
 		
 		figureHandler = new MessageHandle();
 		
-		new Figure(new Vector2(50, 0), "Sanae Kochiya", "figures/Sanae Kochiya.png", new Rectangle(24 * 2, 32 * 2), 4000);
-		new Figure(new Vector2(150, 0), "Cirno", "figures/Cirno.png", new Rectangle(24 * 2, 32 * 2), 7000);
-		new Figure(new Vector2(250, 0), "Youmu Konpaku", "figures/Youmu Konpaku.png", new Rectangle(24 * 2, 32 * 2), 6000);
+		File characterFolder = new File("figures/");
+		for (final File f : characterFolder.listFiles()) {
+			if (!f.isDirectory()) continue;
+			
+			// f.getAbsolutePath() 
+			Object obj = new JSONParser().parse(new FileReader("figures/" + f.getName() + "/CharacterData.JSON")); 
+	        JSONObject jo = (JSONObject) obj; 
+	        
+	        Map spawnPositionMap = (Map)jo.get("spawnPosition");
+			Vector2 spawnPosition = new Vector2((long)spawnPositionMap.get("x"), (long)spawnPositionMap.get("y"));
+			Map spriteSizeMap = (Map)jo.get("spriteSize");
+			Point spriteSize = new Point((int)(long)spriteSizeMap.get("x"), (int)(long)spriteSizeMap.get("y"));
+			String fullName = (String)jo.get("firstName") + jo.get("lastName");
+			int floatValue = (int)(long)jo.get("floatValue");
+			
+	        Map vocabulary = (Map)jo.get("vocabulary");
+	        JSONArray upsetVocabulary = (JSONArray)vocabulary.get("upset");
+	        JSONArray normalVocabulary = (JSONArray)vocabulary.get("normal");
+	        JSONArray happyVocabulary = (JSONArray)vocabulary.get("happy");
+			
+	        
+	        Figure figure = new Figure(spawnPosition, fullName, "figures/" + f.getName() + "/CharacterSprite.png", new Rectangle(spriteSize.x, spriteSize.y), floatValue);
+			figure.setVocabulary(new Vocabulary(upsetVocabulary, normalVocabulary, happyVocabulary));
+		}
+		
+//		new Figure(new Vector2(150, 0), "Cirno", "figures/Cirno.png", new Rectangle(24 * 2, 32 * 2), 7000);
+		/*new Figure(new Vector2(250, 0), "Youmu Konpaku", "figures/Youmu Konpaku.png", new Rectangle(24 * 2, 32 * 2), 6000);
 		new Figure(new Vector2(350, 0), "Reimu Hakurei", "figures/Reimu Hakurei.png", new Rectangle(24 * 2, 32 * 2), 5000);
 		new Figure(new Vector2(450, 0), "Alice Margatroid", "figures/Alice Margatroid.png", new Rectangle(24 * 2, 32 * 2), 4000);
 		new Figure(new Vector2(550, 0), "Flandre Scarlet", "figures/Flandre Scarlet.png", new Rectangle(24 * 2, 32 * 2), 5000);
 		new Figure(new Vector2(650, 0), "Sakuya Izayoi", "figures/Sakuya Izayoi.png", new Rectangle(24 * 2, 32 * 2), 5000);
 		new Figure(new Vector2(750, 0), "Hong Mieling", "figures/Hong Meiling.png", new Rectangle(24 * 2, 32 * 2), 5000);
+		new Figure(new Vector2(50, 0), "Sanae Kochiya", "figures/Sanae Kochiya.png", new Rectangle(24 * 2, 32 * 2), 4000);
+		*/
 		
 		new Body(new Vector2(0, height).add(safeBounds), new Rectangle(width, 5120));
 		new Body(new Vector2(0, -5120).add(safeBounds), new Rectangle(width, 5120));
 		new Body(new Vector2(width, -2560).add(safeBounds), new Rectangle(51200, height + 5120));
 		new Body(new Vector2(-51200, -2560).add(safeBounds), new Rectangle(51200, height + 5120));		
 		
+		figureHandler.SendMessage(Figure.allFigures.size() + " characters spawned, but at what cost", new Point(200, 200), "Shion Yorigami");
 		
 		if (DEBUG)
 		{
