@@ -259,20 +259,12 @@ class FairyStomach extends TransferHandler {
 	}
 }
 
-class MessageItem{
-	public float timer;
-	public JLabel messageFrame;
-	public JLabel messageText;
-	public MessageItem(JLabel messageFrame, JLabel messageText)
-	{
-		this.timer = 0;
-		this.messageFrame = messageFrame;
-		this.messageText = messageText;
-	}
-}
-
 class MessageHandle{
 	
+	DefaultListModel<String> messageLogNames = new DefaultListModel<>();  
+	DefaultListModel<String> messageLogText = new DefaultListModel<>();  
+	JList<String> messageLogListText;
+	JList<String> messageLogListNames;
 	public JFrame messageOverlayFrame;
 	public JFrame messageLogFrame;
 	
@@ -288,12 +280,30 @@ class MessageHandle{
 		
 		messageLogFrame = new JFrame("Touhoes");
 		messageLogFrame.setAlwaysOnTop(true);
+		messageLogFrame.setResizable(false);
 		messageLogFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		messageLogFrame.setBounds(150, 150, 640, 420);
+		
+		JPanel messageLogPanel = new JPanel();
+		messageLogPanel.setLayout(new FlowLayout());
+        
+		messageLogListNames = new JList<>(messageLogNames);
+		messageLogListNames.setBounds(messageLogFrame.getBounds());
+		messageLogPanel.add(messageLogListNames);
+		
+		messageLogListText = new JList<>(messageLogText);
+		messageLogListText.setBounds(messageLogFrame.getBounds());
+		messageLogPanel.add(messageLogListText);
+		
+		messageLogFrame.getContentPane().add(messageLogPanel);
 		messageLogFrame.setVisible(true);
 	}
 	
 	public void SendMessage(String message, Point location){
+		SendMessage(message, location, "");
+	}
+	
+	public void SendMessage(String message, Point location, String name){
 		
 		Font messageFont = new Font("Arial", Font.BOLD, 12);
 		JFrame messageFrame = new JFrame();
@@ -302,7 +312,6 @@ class MessageHandle{
 		messageFrame.setUndecorated(true);
 		messageFrame.setType(javax.swing.JFrame.Type.UTILITY);
 		messageFrame.setBounds(location.x, location.y, messageFrame.getFontMetrics(messageFont).stringWidth(message) + 6, 16);
-		
 		
 		JLabel textLabel = new JLabel(message);
 		textLabel.setFont(messageFont);
@@ -322,7 +331,7 @@ class MessageHandle{
 		      @Override
 		      public void run() {
 		           try {
-		                  Thread.sleep(3000); // time after which pop up will be disappeared.
+		                  Thread.sleep(3000);
 		                  messageFrame.dispose();
 		           } catch (InterruptedException e) {
 		                  e.printStackTrace();
@@ -330,7 +339,9 @@ class MessageHandle{
 		      };
 		}.start();
 		
-		// add log to log
+		messageLogNames.addElement(name);
+		messageLogText.addElement(message);
+		messageLogFrame.pack();
 	}
 }
 
@@ -441,7 +452,7 @@ class Figure extends Body{
 		{
 			figureTalkTimer = 0;
 			figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
-			JFrameTesting.figureHandler.SendMessage(figureMessages[randomizer.nextInt(figureMessages.length)], bodyRectangle.getLocation());
+			JFrameTesting.figureHandler.SendMessage(figureMessages[randomizer.nextInt(figureMessages.length)], bodyRectangle.getLocation(), figureFrame.getTitle());
 		}
 		
 		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
