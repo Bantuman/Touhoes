@@ -620,7 +620,7 @@ public class JFrameTesting {
 			Vector2 spawnPosition = new Vector2((long)spawnPositionMap.get("x"), (long)spawnPositionMap.get("y"));
 			Map spriteSizeMap = (Map)jo.get("spriteSize");
 			Point spriteSize = new Point((int)(long)spriteSizeMap.get("x"), (int)(long)spriteSizeMap.get("y"));
-			String fullName = (String)jo.get("firstName") + jo.get("lastName");
+			String fullName = (String)jo.get("firstName") + " " + jo.get("lastName");
 			int floatValue = (int)(long)jo.get("floatValue");
 			
 	        Map vocabulary = (Map)jo.get("vocabulary");
@@ -628,20 +628,9 @@ public class JFrameTesting {
 	        JSONArray normalVocabulary = (JSONArray)vocabulary.get("normal");
 	        JSONArray happyVocabulary = (JSONArray)vocabulary.get("happy");
 			
-	        
 	        Figure figure = new Figure(spawnPosition, fullName, "figures/" + f.getName() + "/CharacterSprite.png", new Rectangle(spriteSize.x, spriteSize.y), floatValue);
 			figure.setVocabulary(new Vocabulary(upsetVocabulary, normalVocabulary, happyVocabulary));
 		}
-		
-//		new Figure(new Vector2(150, 0), "Cirno", "figures/Cirno.png", new Rectangle(24 * 2, 32 * 2), 7000);
-		/*new Figure(new Vector2(250, 0), "Youmu Konpaku", "figures/Youmu Konpaku.png", new Rectangle(24 * 2, 32 * 2), 6000);
-		new Figure(new Vector2(350, 0), "Reimu Hakurei", "figures/Reimu Hakurei.png", new Rectangle(24 * 2, 32 * 2), 5000);
-		new Figure(new Vector2(450, 0), "Alice Margatroid", "figures/Alice Margatroid.png", new Rectangle(24 * 2, 32 * 2), 4000);
-		new Figure(new Vector2(550, 0), "Flandre Scarlet", "figures/Flandre Scarlet.png", new Rectangle(24 * 2, 32 * 2), 5000);
-		new Figure(new Vector2(650, 0), "Sakuya Izayoi", "figures/Sakuya Izayoi.png", new Rectangle(24 * 2, 32 * 2), 5000);
-		new Figure(new Vector2(750, 0), "Hong Mieling", "figures/Hong Meiling.png", new Rectangle(24 * 2, 32 * 2), 5000);
-		new Figure(new Vector2(50, 0), "Sanae Kochiya", "figures/Sanae Kochiya.png", new Rectangle(24 * 2, 32 * 2), 4000);
-		*/
 		
 		new Body(new Vector2(0, height).add(safeBounds), new Rectangle(width, 5120));
 		new Body(new Vector2(0, -5120).add(safeBounds), new Rectangle(width, 5120));

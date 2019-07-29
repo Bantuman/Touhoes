@@ -1,0 +1,26 @@
+{
+    "firstName": "Reimu",
+    "lastName": "Hakurei",
+    "spawnPosition": {
+        "x": 350,
+        "y": 0
+    },
+    "spriteSize": {
+        "x": 48,
+        "y": 64
+    },
+    "floatValue": 5000,
+    "vocabulary" : {
+        "upset" : [
+            "Feed me", "I require food", "Give me food"
+        ],
+        "normal" : [
+            "Bla bla la", "Bla", "Bla bla"
+        ],
+        "happy" : [
+
+        ]
+    } 
+}
+
+

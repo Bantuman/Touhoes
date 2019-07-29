@@ -1,0 +1,26 @@
+{
+    "firstName": "Flandre",
+    "lastName": "Scarlet",
+    "spawnPosition": {
+        "x": 550,
+        "y": 0
+    },
+    "spriteSize": {
+        "x": 48,
+        "y": 64
+    },
+    "floatValue": 5000,
+    "vocabulary" : {
+        "upset" : [
+            "feed me..", "..i require food..", "..give me food"
+        ],
+        "normal" : [
+            "Bla bla la", "Bla", "Bla bla"
+        ],
+        "happy" : [
+
+        ]
+    } 
+}
+
+
