@@ -217,11 +217,24 @@ class Animation{
 }
 class FairyStomach extends TransferHandler {
 	private Figure body;
+	public int storedFood;
+	public int maxFood;
+	
 	public FairyStomach(Figure body)
 	{
 		super();
 		this.body = body;
+		this.maxFood = body.stomachSize;
+		this.storedFood = this.maxFood;
 	}
+	
+	private void eatFile(File food) {
+		long kb = (food.length() / 1024);
+		storedFood += kb;
+		food.delete();
+		JFrameTesting.figureHandler.SendMessage("nom nom nom, current hunger: " + body.figureStomach.storedFood + " kb (+" + kb + ")", body.bodyRectangle.getLocation(), body.figureFrame.getTitle());
+	}
+	
 	public boolean canImport(JComponent com, DataFlavor[] dataFlavors) {
 		for (int i = 0; i < dataFlavors.length; i++) {
 			DataFlavor flavor = dataFlavors[i];
@@ -246,8 +259,7 @@ class FairyStomach extends TransferHandler {
 					Iterator iter = l.iterator();
 					while (iter.hasNext()) {
 						File file = (File) iter.next();
-						JFrameTesting.figureHandler.SendMessage("nom nom nom", body.bodyRectangle.getLocation());
-						file.delete();
+						eatFile(file);
 					}
 					return true;
 				} else if (flavor.equals(DataFlavor.stringFlavor)) {
@@ -274,6 +286,8 @@ class MessageHandle{
 	DefaultListModel<String> messageLogText = new DefaultListModel<>();  
 	JList<String> messageLogListText;
 	JList<String> messageLogListNames;
+	JScrollPane messageLogScrollPane;
+	
 	public JFrame messageOverlayFrame;
 	public JFrame messageLogFrame;
 	
@@ -288,11 +302,9 @@ class MessageHandle{
 		messageOverlayFrame.setVisible(true);
 		
 		messageLogFrame = new JFrame("Touhoes");
-		messageLogFrame.setAlwaysOnTop(true);
 		messageLogFrame.setResizable(false);
 		messageLogFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		messageLogFrame.setBounds(150, 150, 640, 420);
-		//messageLogFrame.setPreferredSize(new Dimension(640, 420));
 		messageLogFrame.setMaximumSize(new Dimension(420, 720));
 		messageLogFrame.setMinimumSize(new Dimension(256, 64));
 		
@@ -313,9 +325,9 @@ class MessageHandle{
 		renderer.setHorizontalAlignment(SwingConstants.RIGHT);
 		renderer.setIcon(new ImageIcon(""));
 		
-		messageLogFrame.getContentPane().add(messageLogPanel);
+		messageLogScrollPane = new JScrollPane(messageLogPanel);
+		messageLogFrame.getContentPane().add(messageLogScrollPane);
 		messageLogFrame.setVisible(true);
-		messageLogFrame.pack();
 	}
 	
 	public void SendMessage(String message, Point location){
@@ -360,7 +372,7 @@ class MessageHandle{
 		
 		messageLogNames.addElement(name);
 		messageLogText.addElement(message);
-		messageLogFrame.pack();
+		messageLogScrollPane.getVerticalScrollBar().setValue(messageLogScrollPane.getVerticalScrollBar().getMaximum() + 10);
 	}
 }
 
@@ -383,6 +395,8 @@ class Figure extends Body{
 	private boolean figureGrounded;
 	private boolean figureFlying;
 	
+	public FairyStomach figureStomach;
+	public int stomachSize;
 	public JFrame figureFrame;
 	public float figureMass;
 	public boolean figureDragging;
@@ -401,12 +415,14 @@ class Figure extends Body{
 		this.bodyVelocity = new Vector2(0, 0);
 		this.bodyRectangle = figureSize;
 		this.randomizer = new Random(figureName.length() + (int)figureMass);
+		this.stomachSize = 5000;
+		this.figureStomach = new FairyStomach(this);
 		
 		figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
 		bodyRectangle.setLocation(figurePosition.ToPoint());
 		figureFrame = new JFrame(figureName);
 		JComponent cp = (JComponent) figureFrame.getContentPane();
-		cp.setTransferHandler(new FairyStomach(this));
+		cp.setTransferHandler(this.figureStomach);
 		figureFrame.setAlwaysOnTop(true);
 		figureFrame.setType(javax.swing.JFrame.Type.UTILITY);
 		figureFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -472,7 +488,16 @@ class Figure extends Body{
 		{
 			figureTalkTimer = 0;
 			figureTalkDelay = (4 + this.randomizer.nextInt(50)) * 1000;
-			JFrameTesting.figureHandler.SendMessage((String)figureVocabulary.normal.get(randomizer.nextInt(figureVocabulary.normal.size())), bodyRectangle.getLocation(), figureFrame.getTitle());
+			figureStomach.storedFood -= 20;
+			if (figureStomach.storedFood >= figureStomach.maxFood / 2) {
+				JFrameTesting.figureHandler.SendMessage((String)figureVocabulary.normal.get(randomizer.nextInt(figureVocabulary.normal.size())), bodyRectangle.getLocation(), figureFrame.getTitle());
+			} else if (figureStomach.storedFood >= 100) {
+				JFrameTesting.figureHandler.SendMessage((String)figureVocabulary.upset.get(randomizer.nextInt(figureVocabulary.upset.size())), bodyRectangle.getLocation(), figureFrame.getTitle());
+			} else {
+				JFrameTesting.figureHandler.SendMessage("Hunger is below 100 kilobytes, going berserk.", bodyRectangle.getLocation(), figureFrame.getTitle());
+
+				// start eating random files
+			}
 		}
 		
 		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
@@ -632,12 +657,12 @@ public class JFrameTesting {
 			figure.setVocabulary(new Vocabulary(upsetVocabulary, normalVocabulary, happyVocabulary));
 		}
 		
-		new Body(new Vector2(0, height).add(safeBounds), new Rectangle(width, 5120));
-		new Body(new Vector2(0, -5120).add(safeBounds), new Rectangle(width, 5120));
-		new Body(new Vector2(width, -2560).add(safeBounds), new Rectangle(51200, height + 5120));
-		new Body(new Vector2(-51200, -2560).add(safeBounds), new Rectangle(51200, height + 5120));		
+		new Body(new Vector2(0, height).add(safeBounds), new Rectangle(width, 51200));
+		new Body(new Vector2(0, -51200).add(safeBounds), new Rectangle(width, 51200));
+		new Body(new Vector2(width, -25600).add(safeBounds), new Rectangle(51200, height + 51200));
+		new Body(new Vector2(-51200, -25600).add(safeBounds), new Rectangle(51200, height + 51200));		
 		
-		figureHandler.SendMessage(Figure.allFigures.size() + " characters spawned, but at what cost", new Point(200, 200), "Shion Yorigami");
+		figureHandler.SendMessage(Figure.allFigures.size() + " characters spawned, but at what cost", new Point(width / 2, 50), "Shion Yorigami");
 		
 		if (DEBUG)
 		{
