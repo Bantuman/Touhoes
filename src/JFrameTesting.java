@@ -25,6 +25,8 @@ import org.json.simple.parser.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 
 class Vector2
 {           
@@ -112,42 +114,7 @@ class Vector2
     }
 }
 
-class Message extends JComponent{
-	private String messageText;
-	private Body messageAdornee;
-	public JLabel messageLabel;
-	private float messageTimer;
-	private int messageIndex;
-	private float messageDelay;
-	
-	public Message(String text, float timeInbetweenWords, Vector2 position, Body body)
-	{
-		this.messageDelay = timeInbetweenWords * 1000;
-		this.messageText = text;
-		this.messageAdornee = body;
-	}
-	
-	@Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g.drawString(messageText.substring(0, messageIndex), (int)Math.round(messageAdornee.bodyPosition.x), (int)Math.round(messageAdornee.bodyPosition.y));
-    }
-	
-	public void Update(float deltaTime)
-	{
-		messageTimer += deltaTime;
-		if (messageTimer >= messageDelay)
-		{
-			messageTimer -= messageDelay;
-			
-			if (messageIndex < messageText.length())
-			{
-				++messageIndex;
-				repaint();
-			}
-		}
-	}
-}
+
 
 class Body{
 	public static ArrayList<Body> allBodies;
@@ -280,6 +247,23 @@ class FairyStomach extends TransferHandler {
 	}
 }
 
+class MessageBox extends JLabel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public MessageBox(String msg){
+		super(msg);
+	}
+	public void paintComponent(Graphics g) {
+		g.setColor(Color.white);
+		g.fillRoundRect(0, 4, getWidth(), getHeight() - 8, 15, 15);
+		g.fillPolygon(new int[]{2, 8, 16}, new int[]{20, 28, 20}, 3);
+		super.paintComponent(g);
+  	}
+}
+
+
 class MessageHandle{
 	
 	DefaultListModel<String> messageLogNames = new DefaultListModel<>();  
@@ -337,24 +321,25 @@ class MessageHandle{
 	public void SendMessage(String message, Point location, String name){
 		
 		Font messageFont = new Font("Dialog", Font.BOLD, 12);
-		JFrame messageFrame = new JFrame();
-		messageFrame.setAlwaysOnTop(true);
-		messageFrame.setLocation(location);
-		messageFrame.setUndecorated(true);
-		messageFrame.setType(javax.swing.JFrame.Type.UTILITY);
-		messageFrame.setBounds(location.x, location.y, messageFrame.getFontMetrics(messageFont).stringWidth(message) + 6, 16);
-		
-		JLabel textLabel = new JLabel(message);
+		MessageBox textLabel = new MessageBox(message);
 		textLabel.setFont(messageFont);
 		textLabel.setOpaque(false);
+		textLabel.setBackground(new Color(1f, 1f, 1f, 0f));
 		textLabel.setHorizontalAlignment(JLabel.CENTER);
+		textLabel.setVerticalTextPosition(JLabel.TOP);
 		textLabel.setVerticalAlignment(JLabel.CENTER);
-		messageFrame.getContentPane().add(textLabel);
-		messageFrame.setVisible(true);
-		messageFrame.addMouseListener(new MouseAdapter() {
+
+		location.y -= 24;
+		textLabel.setLocation(location);
+		textLabel.setSize(messageOverlayFrame.getFontMetrics(messageFont).stringWidth(message) + 6, 28);
+		messageOverlayFrame.getContentPane().add(textLabel);
+
+		textLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-            	messageFrame.dispose();
+            	textLabel.setEnabled(false);
+            	messageOverlayFrame.getContentPane().remove(textLabel);
+            	messageOverlayFrame.repaint();
             }
         });
 		
@@ -363,16 +348,20 @@ class MessageHandle{
 		      public void run() {
 		           try {
 		                  Thread.sleep(3000);
-		                  messageFrame.dispose();
+		                  textLabel.setEnabled(false);
+		              	  messageOverlayFrame.getContentPane().remove(textLabel);
+		              	  messageOverlayFrame.repaint();
+
 		           } catch (InterruptedException e) {
 		                  e.printStackTrace();
 		           }
 		      };
 		}.start();
 		
+		messageOverlayFrame.repaint();
 		messageLogNames.addElement(name);
 		messageLogText.addElement(message);
-		messageLogScrollPane.getVerticalScrollBar().setValue(messageLogScrollPane.getVerticalScrollBar().getMaximum() + 10);
+		messageLogScrollPane.getVerticalScrollBar().setValue(messageLogScrollPane.getVerticalScrollBar().getMaximum());
 	}
 }
 
