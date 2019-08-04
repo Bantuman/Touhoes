@@ -717,7 +717,7 @@ public class JFrameTesting {
 							Dimension intersection = newRectangle.intersection(jBody.bodyRectangle).getSize();
 							oldLocation = newLocation.TranslatedBy(surfaceNormal.x * intersection.width, surfaceNormal.y * intersection.height);
 							iBody.bodyPosition = oldLocation;
-							if (oldVelocity.Length() > 0.4f)
+							if (oldVelocity.Length() > 0.7f)
 							{
 								float velocityX = Math.abs(iBody.bodyVelocity.x) * 0.5f;
 								float velocityY = Math.abs(iBody.bodyVelocity.y) * 0.5f;
