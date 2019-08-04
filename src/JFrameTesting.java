@@ -114,8 +114,6 @@ class Vector2
     }
 }
 
-
-
 class Body{
 	public static ArrayList<Body> allBodies;
 	public static DebugRectangle DEBUG_RECT;
@@ -248,9 +246,6 @@ class FairyStomach extends TransferHandler {
 }
 
 class MessageBox extends JLabel {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	public MessageBox(String msg){
 		super(msg);
@@ -704,23 +699,21 @@ public class JFrameTesting {
 						{
 							Vector2 surfaceNormal = new Vector2(0, -1);
 							Vector2 currentLocation = oldLocation.add(new Vector2(iBody.bodyRectangle.width * 0.5f, iBody.bodyRectangle.height * 0.5f));
-							if (currentLocation.x < jBody.bodyPosition.x)
-							{
-								surfaceNormal = new Vector2(-1, 0);
-							} 
-							else if(currentLocation.x > jBody.bodyPosition.x + jBody.bodyRectangle.width)
-							{
-								surfaceNormal = new Vector2(1, 0);
-							}
-							if (currentLocation.y < jBody.bodyPosition.y)
-							{
-								surfaceNormal = new Vector2(0, -1);
-							} 
-							else if(currentLocation.y > jBody.bodyPosition.y + jBody.bodyRectangle.height)
-							{
-								surfaceNormal = new Vector2(0, 1);
-							}
+	
+							float distanceTop = (jBody.bodyPosition.add(new Vector2(jBody.bodyRectangle.width / 2, 0)).subtract(currentLocation)).Length();
+							float distanceBottom = (jBody.bodyPosition.add(new Vector2(jBody.bodyRectangle.width / 2, jBody.bodyRectangle.height)).subtract(currentLocation)).Length();
+							float distanceRight = (jBody.bodyPosition.add(new Vector2(jBody.bodyRectangle.width, jBody.bodyRectangle.height / 2)).subtract(currentLocation)).Length();
+							float distanceLeft = (jBody.bodyPosition.add(new Vector2(0, jBody.bodyRectangle.height / 2)).subtract(currentLocation)).Length();
 							
+							if (distanceBottom < distanceTop && distanceBottom < distanceRight && distanceBottom < distanceLeft)
+								surfaceNormal = new Vector2(0, 1);
+							
+							if (distanceRight < distanceTop && distanceRight < distanceBottom && distanceRight < distanceLeft)
+								surfaceNormal = new Vector2(1, 0);
+
+							if (distanceLeft < distanceTop && distanceLeft < distanceRight && distanceLeft < distanceBottom)
+								surfaceNormal = new Vector2(-1, 0);
+
 							Dimension intersection = newRectangle.intersection(jBody.bodyRectangle).getSize();
 							oldLocation = newLocation.TranslatedBy(surfaceNormal.x * intersection.width, surfaceNormal.y * intersection.height);
 							iBody.bodyPosition = oldLocation;
