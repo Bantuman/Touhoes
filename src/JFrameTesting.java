@@ -249,7 +249,6 @@ class MessageBox extends JLabel {
   	}
 }
 
-
 class MessageHandle{
 	
 	DefaultListModel<String> messageLogNames = new DefaultListModel<>();  
@@ -477,17 +476,18 @@ class Figure extends Body{
 		
 		float width = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getWidth();
 		float height = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode().getHeight();
-		if (bodyPosition.x < -128 || bodyPosition.x > width + 128 || bodyPosition.y < -64 || bodyPosition.y > height)
+		if (bodyPosition.x < -256 || bodyPosition.x > width + 256 || bodyPosition.y < -256 || bodyPosition.y > height + 256)
 		{
 			bodyPosition = new Vector2(100, 64);
 			bodyVelocity = new Vector2(0, 0);
 		}
 		
 		bodyVelocity = new Vector2(Math.min(5, Math.max(-5, bodyVelocity.x)), Math.min(5, Math.max(-5, bodyVelocity.y)));
-
+		
+		deltaTime = Math.min(1000, deltaTime);
 		bodyVelocity.Translate(0, (GRAVITY / figureMass) * deltaTime * (figureFlying ? 0.01f : 1f));
 		bodyPosition.Translate(bodyVelocity.x * deltaTime, bodyVelocity.y * deltaTime);
-		figureGrounded = (bodyPosition.y > JFrameTesting.figureController.getHeight() - 96);
+		figureGrounded = (bodyPosition.y > height - 96);
 		if (bodyVelocity.x > 0.1f && !figureGrounded)
 		{
 			currentAnimation = flyRightAnimation;
