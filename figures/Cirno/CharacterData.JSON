@@ -24,7 +24,7 @@
         ]
     },
     "stomach": {
-        "hunger": 10, // how many bytes get disolved per stomach update
+        "hunger": 10,
         "current": 5000,
     }
 }

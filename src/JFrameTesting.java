@@ -1,23 +1,16 @@
 import java.awt.*;
-import java.awt.List;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.json.simple.JSONArray; 
 import org.json.simple.JSONObject; 
@@ -25,8 +18,6 @@ import org.json.simple.parser.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 
 class Vector2
 {           
@@ -42,7 +33,7 @@ class Vector2
         this.x = 0.0f;
         this.y = 0.0f;
     }
-        
+
     public Vector2(float x, float y) {
         this.x = x;
         this.y = y;
@@ -116,8 +107,7 @@ class Vector2
 
 class Body{
 	public static ArrayList<Body> allBodies;
-	public static DebugRectangle DEBUG_RECT;
-	
+
 	public Rectangle bodyRectangle;
 	public Vector2 bodyVelocity;
 	public Vector2 bodyPosition;
@@ -181,6 +171,7 @@ class Animation{
 	}
 }
 class FairyStomach extends TransferHandler {
+	private static final long serialVersionUID = 1L;
 	private Figure body;
 	public int storedFood;
 	public int maxFood;
@@ -221,7 +212,7 @@ class FairyStomach extends TransferHandler {
 				if (flavor.equals(DataFlavor.javaFileListFlavor)) {   
 					@SuppressWarnings("rawtypes")
 					java.util.List l = (java.util.List) t.getTransferData(DataFlavor.javaFileListFlavor);
-					Iterator iter = l.iterator();
+					Iterator<?> iter = l.iterator();
 					while (iter.hasNext()) {
 						File file = (File) iter.next();
 						eatFile(file);
@@ -230,7 +221,7 @@ class FairyStomach extends TransferHandler {
 				} else if (flavor.equals(DataFlavor.stringFlavor)) {
 					String fileOrURL = (String) t.getTransferData(flavor);
 					try {
-						URL url = new URL(fileOrURL);
+						new URL(fileOrURL);
 						return true;
 					} catch (MalformedURLException ex) {
 						return false;
@@ -537,24 +528,6 @@ class Figure extends Body{
 	}
 }
 
-class DebugRectangle extends JComponent {
-	ArrayList<Body> bodies;
-	
-	public DebugRectangle(ArrayList<Body> bodies)
-	{
-		this.bodies = bodies;
-	}
-	
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		for(Body body : bodies)
-		{
-			Rectangle rectangle = body.bodyRectangle;
-			g.drawRect (rectangle.getLocation().x, rectangle.getLocation().y, rectangle.width, rectangle.height); 
-		}
-	}
-}
-
 class Vocabulary {
 	public JSONArray upset;
 	public JSONArray normal;
@@ -613,26 +586,23 @@ public class JFrameTesting {
 		
 		Body.allBodies = new ArrayList<Body>();
 		Figure.allFigures = new ArrayList<Figure>();
-		Body.DEBUG_RECT = new DebugRectangle(Body.allBodies);
-		
 		figureHandler = new MessageHandle();
 		
 		File characterFolder = new File("figures/");
 		for (final File f : characterFolder.listFiles()) {
 			if (!f.isDirectory()) continue;
 			
-			// f.getAbsolutePath() 
 			Object obj = new JSONParser().parse(new FileReader("figures/" + f.getName() + "/CharacterData.JSON")); 
 	        JSONObject jo = (JSONObject) obj; 
 	        
-	        Map spawnPositionMap = (Map)jo.get("spawnPosition");
+	        Map<?, ?> spawnPositionMap = (Map<?, ?>)jo.get("spawnPosition");
 			Vector2 spawnPosition = new Vector2((long)spawnPositionMap.get("x"), (long)spawnPositionMap.get("y"));
-			Map spriteSizeMap = (Map)jo.get("spriteSize");
+			Map<?, ?> spriteSizeMap = (Map<?, ?>)jo.get("spriteSize");
 			Point spriteSize = new Point((int)(long)spriteSizeMap.get("x"), (int)(long)spriteSizeMap.get("y"));
 			String fullName = (String)jo.get("firstName") + " " + jo.get("lastName");
 			int floatValue = (int)(long)jo.get("floatValue");
 			
-	        Map vocabulary = (Map)jo.get("vocabulary");
+	        Map<?, ?> vocabulary = (Map<?, ?>)jo.get("vocabulary");
 	        JSONArray upsetVocabulary = (JSONArray)vocabulary.get("upset");
 	        JSONArray normalVocabulary = (JSONArray)vocabulary.get("normal");
 	        JSONArray happyVocabulary = (JSONArray)vocabulary.get("happy");
@@ -648,17 +618,10 @@ public class JFrameTesting {
 		
 		figureHandler.SendMessage(Figure.allFigures.size() + " characters spawned, but at what cost", new Point(width / 2, 50), "Shion Yorigami");
 		
-		if (DEBUG)
-		{
-			figureController.getContentPane().add(Body.DEBUG_RECT);
-		}
-	
 		figureController.setLocation(0, 0);
 		figureController.pack();
 		figureController.setVisible(true);
-		
-		//List<File> dropppedFiles = (List<File>)transferable.getTransferData(DataFlavor.javaFileListFlavor);
-		
+			
 		// MIGHT WANNA SWITCH TO THIS IN THE FUTURE: https://gafferongames.com/post/fix_your_timestep/
 		
 		boolean isRunning = true;
@@ -667,11 +630,6 @@ public class JFrameTesting {
 		{
 			float deltaTime = System.currentTimeMillis() - lastUpdate;
 			lastUpdate = System.currentTimeMillis();
-			
-			if (DEBUG)
-			{
-				Body.DEBUG_RECT.repaint();	
-			}
 			
 			for(int i = 0; i < Body.allBodies.size(); ++i)
 			{
